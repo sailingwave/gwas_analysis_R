@@ -80,8 +80,9 @@ tbl.assoc <- tbl.assoc %>%
 
 #=== Manhattan plot
 
-n_chr = length(max_pos$chr)
-pallete = rep(c("blue4", "orange3"),times = ceiling(n_chr/2))[1:n_chr]
+pallete <- as.numeric(unique(tbl.assoc$chr))%%2 %>% as.character()
+pallete[pallete == '1'] <- "blue4"
+pallete[pallete == '0'] <- "orange3"
 
 if(!is.na(output_mh)){
     cat("Generating Manhattan plot ... ")
