@@ -36,6 +36,9 @@ library(ggplot2)
 library(dplyr)
 library(data.table)
 
+fast_plot = T    #whether plot a small fraction of SNPs below a p value cutoff
+p_cut = 1e-2
+snp_frac = 0.05
 
 #=== Data preparation
 
@@ -56,8 +59,26 @@ tbl.assoc = tbl_dt(association_data)
 if(test){    #for developing
     bak <- copy(tbl.assoc)
     set.seed(123)
-    tbl.assoc = sample_frac(bak,0.0001, replace = TRUE)
+    tbl.assoc = sample_frac(bak,0.0001, replace = F)
 }
+
+#=== for fast plot
+
+if(fast_plot){
+    #bak <- copy(tbl.assoc)
+    set.seed(888)
+    sampl_snp <- bak %>%
+        filter(p >= p_cut) %>%
+        sample_frac(snp_frac, replace = F)
+    
+    tbl.assoc <- bak %>%
+        filter(p < p_cut) %>%
+        rbind(sampl_snp)
+}
+
+#===========#
+
+chr_sep = 2e7    #separation among chromosomes, in base pairs; can be set to 0 if no separation is wanted
 
 #max bp for each chr
 max_pos <- tbl.assoc %>%
@@ -69,14 +90,17 @@ max_pos$max_pos = as.numeric(max_pos$max_pos)
 x_lab = paste0('chr',max_pos$chr)    #for mh plotting
 
 max_pos <- max_pos %>%
-    mutate(cs = cumsum(max_pos),lcs = lag(cs,1,default=0),chr_mk = lcs+max_pos/2)
-#cumulative sum, lag cs, tick mark positions for each chr
+    mutate(max_p_sep = max_pos+chr_sep,cs = cumsum(max_p_sep),lcs = lag(cs,1,default=0),
+           chr_mk = lcs+max_pos/2,chr_sep_line = lcs-chr_sep/2) %>%
+    select(chr,lcs,chr_mk,chr_sep_line)
+#max+chr_sep, cumulative sum, lag cs, tick mark positions for each chr, dotted-line position for separating chr 
 
 #merge
 tbl.assoc <- tbl.assoc %>%
-    left_join(max_pos) %>%
-    mutate(x_pos = pos+lcs)
-    
+    left_join(max_pos,by='chr') %>%
+    mutate(x_pos = pos+lcs) %>%
+    arrange(chr,pos)
+
 
 #=== Manhattan plot
 
@@ -84,13 +108,15 @@ pallete <- as.numeric(unique(tbl.assoc$chr))%%2 %>% as.character()
 pallete[pallete == '1'] <- "blue4"
 pallete[pallete == '0'] <- "orange3"
 
+
+
 if(!is.na(output_mh)){
     cat("Generating Manhattan plot ... ")
     
     runtime = system.time(
     {
         mh_plot <- ggplot(tbl.assoc, aes(x=x_pos, y=-log10(p), color=chr)) +
-            geom_vline(xintercept=max_pos$lcs[-1],linetype="dotted", size=.8,color='white') +
+            geom_vline(xintercept=max_pos$chr_sep_line[-1],linetype="dotted", size=.8,color='white') +
             geom_hline(aes(yintercept=-log10(5e-08)),color="red") +
             geom_point(shape=20, size = 3)+ xlab("") +
             scale_x_continuous(breaks=max_pos$chr_mk,labels=x_lab) +
