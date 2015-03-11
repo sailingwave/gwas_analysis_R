@@ -14,9 +14,9 @@ down_dbsnp <- function(snp){
     doc <- htmlParse(dbsnp)
     tabs <- readHTMLTable(doc,header = F,stringsAsFactors = F)
     
-    info <<- as.data.frame(tabs[[11]])[2:14,1:2]    #general info
+    info <- as.data.frame(tabs[[11]])[2:14,1:2]    #general info
     
-    div <<- data.frame(tabs$Diversity)[-1,-12]   #diversity
+    div <- data.frame(tabs$Diversity)[-1,-12]   #diversity
     names(div) = div[1,]
     div = div[div$Pop != '',]
     div = div[-1,]
@@ -29,22 +29,24 @@ down_dbsnp <- function(snp){
     file = getURL(url)
     doc <- xmlParse(file)
     rt = xmlRoot(doc)
-    #ns = xmlNamespaces(doc, simplify = TRUE)
+    ns = xmlNamespaces(doc, simplify = TRUE)
+    names(ns)[names(ns) == ""] <- 'x'        #name x as the default namespace
     
-    assembly = xpathSApply(rt,"//x:Assembly",xmlAttrs,namespaces = 'x')    #x is the default namespace
-    chr = xpathSApply(rt,"//x:Component",xmlGetAttr,name="chromosome",namespaces = 'x')
-    pos = xpathSApply(rt,"//x:MapLoc",xmlAttrs,namespaces = 'x')
+    assembly = xpathSApply(rt,"//x:Assembly",xmlAttrs,namespaces = ns)
+    chr = xpathSApply(rt,"//x:Component",xmlGetAttr,name="chromosome",namespaces = ns)
+    pos = xpathSApply(rt,"//x:MapLoc",xmlAttrs,namespaces = ns)
     
-    assem_info <<- t(rbind(assembly,chr,pos))[,c(1:3,6,11,12,15)]
+    assem_info <- t(rbind(assembly,chr,pos))[,c(1:3,6,11,12,15)]
+    
+    result <- list(info=info,diversity=div,assembly=assem_info)
 }
 
 
 
 #usage
 
-down_dbsnp('rs8078000')    #create info and div in the global env
-info
-div
+info = down_dbsnp('rs8078000')    #create info and div in the global env
+info[[3]]
 
 
 #dev
