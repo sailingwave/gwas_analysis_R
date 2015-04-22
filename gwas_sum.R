@@ -33,8 +33,8 @@ if(test){
 #==================#
 
 library(ggplot2)
-library(dplyr)
 library(data.table)
+library(dplyr)
 
 fast_plot = T    #whether plot a small fraction of SNPs below a p value cutoff
 p_cut = 1e-2
@@ -62,23 +62,9 @@ if(test){    #for developing
     tbl.assoc = sample_frac(bak,0.0001, replace = F)
 }
 
-#=== for fast plot
-
-if(fast_plot){
-    #bak <- copy(tbl.assoc)
-    set.seed(888)
-    sampl_snp <- bak %>%
-        filter(p >= p_cut) %>%
-        sample_frac(snp_frac, replace = F)
-    
-    tbl.assoc <- bak %>%
-        filter(p < p_cut) %>%
-        rbind(sampl_snp)
-}
-
 #===========#
 
-chr_sep = 2e7    #separation among chromosomes, in base pairs; can be set to 0 if no separation is wanted
+chr_sep = 2e7    #separation among chromosomes for mh plot, in base pairs; can be set to 0 if no separation is wanted
 
 #max bp for each chr
 max_pos <- tbl.assoc %>%
@@ -101,6 +87,7 @@ tbl.assoc <- tbl.assoc %>%
     mutate(x_pos = pos+lcs) %>%
     arrange(chr,pos)
 
+n_snp = nrow(tbl.assoc)
 
 #=== Manhattan plot
 
@@ -109,13 +96,26 @@ pallete[pallete == '1'] <- "blue4"
 pallete[pallete == '0'] <- "orange3"
 
 
-
 if(!is.na(output_mh)){
     cat("Generating Manhattan plot ... ")
     
+    if(fast_plot){    #for fast plot
+        mh_data <- copy(tbl.assoc)
+        set.seed(888)
+        sampl_snp <- bak %>%
+            filter(p >= p_cut) %>%
+            sample_frac(snp_frac, replace = F)
+        
+        tbl.assoc <- bak %>%
+            filter(p < p_cut) %>%
+            rbind(sampl_snp)
+    }else{
+        mh_data <- tbl.assoc
+    }
+    
     runtime = system.time(
     {
-        mh_plot <- ggplot(tbl.assoc, aes(x=x_pos, y=-log10(p), color=chr)) +
+        mh_plot <- ggplot(mh_data, aes(x=x_pos, y=-log10(p), color=chr)) +
             geom_vline(xintercept=max_pos$chr_sep_line[-1],linetype="dotted", size=.8,color='white') +
             geom_hline(aes(yintercept=-log10(5e-08)),color="red") +
             geom_point(shape=20, size = 3)+ xlab("") +
@@ -140,21 +140,24 @@ if(!is.na(output_mh)){
 if(!is.na(output_qq)){
     cat("Generating QQ plot ... ")
     
+
+    alpha = 0.05    #alpha level for confidence interval
+    
+    exp = -log10(1:n_snp/n_snp)
+    obs = -log10(sort(tbl.assoc$p))
+        
+    #expected (null) p values ~ unif(0,1), of which the order stat ~ beta(i,N-i+1)
+    ci_up=-log10(qbeta(1-alpha/2, 1:n_snp, (n_snp-1:n_snp+1)))
+    ci_low=-log10(qbeta(alpha/2, 1:n_snp, (n_snp-1:n_snp+1)))
+        
+    lab_exp = expression(paste("Expected -log"[10], plain(P)))
+    lab_obs = expression(paste("Observed -log"[10], plain(P)))
+
+    
+    
+    
     runtime = system.time(
     {
-        alpha = 0.05    #alpha level for confidence interval
-        
-        n_snp = nrow(tbl.assoc)
-        exp = -log10(1:n_snp/n_snp)
-        obs = -log10(sort(tbl.assoc$p))
-        
-        #expected (null) p values ~ unif(0,1), of which the order stat ~ beta(i,N-i+1)
-        ci_up=-log10(qbeta(1-alpha/2, 1:n_snp, (n_snp-1:n_snp+1)))
-        ci_low=-log10(qbeta(alpha/2, 1:n_snp, (n_snp-1:n_snp+1)))
-        
-        lab_exp = expression(paste("Expected -log"[10], plain(P)))
-        lab_obs = expression(paste("Observed -log"[10], plain(P)))
-        
         qq_plot <- ggplot(tbl.assoc) +
             theme_bw() +
             geom_ribbon(aes(x=exp, ymin=ci_up, ymax=ci_low), fill="grey", alpha=.5) +
