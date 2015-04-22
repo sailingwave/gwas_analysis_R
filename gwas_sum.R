@@ -102,11 +102,11 @@ if(!is.na(output_mh)){
     if(fast_plot){    #for fast plot
         mh_data <- copy(tbl.assoc)
         set.seed(888)
-        sampl_snp <- bak %>%
+        sampl_snp <- tbl.assoc %>%
             filter(p >= p_cut) %>%
             sample_frac(snp_frac, replace = F)
         
-        tbl.assoc <- bak %>%
+        tbl.assoc <- tbl.assoc %>%
             filter(p < p_cut) %>%
             rbind(sampl_snp)
     }else{
