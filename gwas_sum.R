@@ -73,7 +73,8 @@ max_pos <- tbl.assoc %>%
     arrange(as.numeric(chr))
 setnames(max_pos,names(max_pos),c('chr','max_pos'))
 max_pos$max_pos = as.numeric(max_pos$max_pos)
-x_lab = paste0('chr',max_pos$chr)    #for mh plotting
+#x_lab = paste0('chr',max_pos$chr)    #for mh plotting
+x_lab = as.character(max_pos$chr)    #for mh plotting
 
 max_pos <- max_pos %>%
     mutate(max_p_sep = max_pos+chr_sep,cs = cumsum(max_p_sep),lcs = lag(cs,1,default=0),
@@ -94,7 +95,6 @@ n_snp = nrow(tbl.assoc)
 pallete <- as.numeric(unique(tbl.assoc$chr))%%2 %>% as.character()
 pallete[pallete == '1'] <- "blue4"
 pallete[pallete == '0'] <- "orange3"
-
 
 if(!is.na(output_mh)){
     cat("Generating Manhattan plot ... ")
@@ -118,13 +118,14 @@ if(!is.na(output_mh)){
         mh_plot <- ggplot(mh_data, aes(x=x_pos, y=-log10(p), color=chr)) +
             geom_vline(xintercept=max_pos$chr_sep_line[-1],linetype="dotted", size=.8,color='white') +
             geom_hline(aes(yintercept=-log10(5e-08)),color="red") +
-            geom_point(shape=20, size = 3)+ xlab("") +
+            geom_point(aes(color=factor(chr)),shape=20, size = 3)+ xlab("") +
             scale_x_continuous(breaks=max_pos$chr_mk,labels=x_lab) +
+            scale_y_continuous(breaks=seq(0, 12, 2)) +
             scale_color_manual(values=pallete,guide=FALSE) +
             theme(panel.grid.major.x = element_blank(),panel.grid.minor = element_blank()) +
-            theme(axis.title.y=element_text(size=16)) +
-            theme(axis.text.y=element_text(size=12))
-        
+            theme(axis.title.y=element_text(size=20)) +
+            theme(axis.text.y=element_text(size=16)) +
+            theme(axis.text.x=element_text(size=16))
         
         tiff(filename=output_mh, compression="lzw", width = 1200, height = 600, units = "px")
             print(mh_plot)
