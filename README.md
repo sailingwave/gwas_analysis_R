@@ -1,6 +1,6 @@
 # R scripts for summarizing GWAS results
 
-Plotting Manhattan plots and QQ plots are standard procedures for visualizing association analysis results from a genome-wide association study (GWAS). Making the plots can be time-consuming, especially when the number of genetic variants is as big as 20 million, since ggplot2 needs to put a dot for each variant. However, the majority of the variants are non-significant with a given p value threshold, for example p > 0.01, therefore they constitute the bulk of the plot yet they overlap with each, which is a waste of time. By randomly selecting a sub-sample from the variancts, time can be saved, while the plot appears no different and carries the same information. When the number of SNPs is huge, the saving can be more than 10 folds.
+Plotting Manhattan plots and QQ plots are standard procedures for visualizing association analysis results from a genome-wide association study (GWAS). Making the plots can be time-consuming, especially when the number of genetic variants is as big as 20 million, since ggplot2 needs to put a dot for each variant. However, the majority of the variants are non-significant with a given p value threshold, for example p > 0.01, therefore they constitute the bulk of the plot yet they overlap with each, which is a waste of time. By randomly selecting a sub-sample from the variants, time can be saved, while the plot appears no different and carries the same information. When the number of SNPs is huge, the saving can be more than 10 folds.
 
 Here is an example:
 
@@ -53,11 +53,11 @@ mhplot(results = results,output_mh = output_mh,fast_plot = F,plot_to_console = T
 ![](README_files/figure-html/unnamed-chunk-3-1.png) 
 
 ```
-##  in 44.389  s
+##  in 57.083  s
 ```
 
 #### 2. Fast plotting
-Using the trick mentioned earlier, the Manhattan plot and tTe time for plotting are
+Using the trick mentioned earlier, the Manhattan plot and the time for plotting are
 
 ```r
 mhplot(results = results,output_mh = output_mh,fast_plot = T,plot_to_console = T,
@@ -71,6 +71,6 @@ mhplot(results = results,output_mh = output_mh,fast_plot = T,plot_to_console = T
 ![](README_files/figure-html/unnamed-chunk-4-1.png) 
 
 ```
-##  in 12.248  s
+##  in 16.994  s
 ```
 The arguments *p_cut* and *snp_frac* can be modified according to the number of SNPs and average p values.
