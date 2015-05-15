@@ -76,7 +76,7 @@ mhplot <- function(results_arg=results,output_mh_arg=output_mh,
                    p_cut = 1e-2,snp_frac = 0.1,
                    plot_to_console=F){
 
-    if(is.na(output_mh)){
+    if(is.na(output_mh) | output_mh=='NA'){
         cat("No MH plot specified.\n")
         return(NULL)
     }
@@ -233,7 +233,7 @@ myQQplot <- function(results_arg=results,output_qq_arg=output_qq,
         theme(axis.text=element_text(size=12))
     
         if(!plot_to_console){
-            png(output_qq, width = 800, height = 800, units = "px")
+            png(output_qq_arg, width = 800, height = 800, units = "px")
         }
     
         print(qq_plot)
@@ -247,7 +247,7 @@ myQQplot <- function(results_arg=results,output_qq_arg=output_qq,
 }
 
 if(length(args)>0){
-    myQQplot(plot_to_console=T)
+    myQQplot()
 }
 
 #=== Calculate GC lambda
