@@ -41,7 +41,7 @@ library(dplyr)
 
 #=== Data preparation
 data_prep <- function(results_arg){
-    association_data<<-fread(results, header=TRUE)
+    association_data<<-fread(results_arg, header=TRUE)
     setnames(association_data,names(association_data),tolower(names(association_data)))
     setkey(association_data,chr)
     
@@ -76,7 +76,7 @@ mhplot <- function(results_arg=results,output_mh_arg=output_mh,
                    p_cut = 1e-2,snp_frac = 0.1,
                    plot_to_console=F){
 
-    if(is.na(output_mh) | output_mh=='NA'){
+    if(is.na(output_mh_arg) | output_mh_arg=='NA'){
         cat("No MH plot specified.\n")
         return(NULL)
     }
@@ -151,7 +151,7 @@ mhplot <- function(results_arg=results,output_mh_arg=output_mh,
         theme(axis.text.x=element_text(size=16))
     
         if(!plot_to_console){
-            png(filename=output_mh, width = 1200, height = 600, units = "px")
+            png(filename=output_mh_arg, width = 1200, height = 600, units = "px")
         }
     
         print(mh_plot)
